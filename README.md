@@ -5,7 +5,7 @@ Built from the PAWSapp records screens.
 
 - Installable web app (works offline; changes sync when the phone has signal)
 - Backend: Supabase project `streets-to-home`
-- Hosting: GitHub Pages, deployed automatically on every push to `main`
+- Hosting: GitHub Pages, deployed automatically on every push to `main`. Public website (`site/`) at the root, staff app at `/app/`
 - Public adoption form: `#/apply/<token>` (link created from an enquiry, valid 30 days)
 
 ## Run locally

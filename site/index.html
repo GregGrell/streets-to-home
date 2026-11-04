@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Streets to Home · Animal rescue in Doha</title>
+  <meta name="description" content="Streets to Home is a small animal rescue in Doha, Qatar, helping forgotten dogs and cats find their forever homes. Meet the animals looking for a home.">
+  <meta property="og:title" content="Streets to Home · Animal rescue in Doha">
+  <meta property="og:description" content="Helping the forgotten find their forever. Meet the dogs and cats looking for a home.">
+  <meta property="og:image" content="logo-lg.png">
+  <meta name="theme-color" content="#FBF7F2">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="stylesheet" href="style.css">
+  <script src="site.js" defer></script>
+</head>
+<body data-page="home">
+  <header class="site-head">
+    <div class="wrap">
+      <a class="logo-link" href="./"><img src="logo.png" alt=""><span>Streets <em>to</em> Home</span></a>
+      <nav class="nav" aria-label="Main">
+        <a href="#adopt">Adopt</a>
+        <a href="#how">How it works</a>
+        <a href="#happy">Happy tails</a>
+        <a class="cta" href="#contact">Get in touch</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="wrap">
+        <div>
+          <h1>Helping the forgotten <span class="script">find their forever</span></h1>
+          <p class="lead">We're a small rescue in Doha. We take dogs and cats off the streets, get them healthy and loved, and match each one with the right family.</p>
+          <div class="btns">
+            <a class="btn" href="#adopt">Meet our animals</a>
+            <a class="btn ghost" href="#contact">Ask us a question</a>
+          </div>
+        </div>
+        <div class="hero-art"><img src="logo-lg.png" alt="Streets to Home logo: a dog and a cat sitting together under a house with a heart"></div>
+      </div>
+    </section>
+
+    <div class="strip" aria-label="Animals looking for a home">
+      <div class="wrap">
+        <div><b id="n-available">–</b><span>Looking for a home</span></div>
+        <div><b id="n-dogs">–</b><span>Dogs</span></div>
+        <div><b id="n-cats">–</b><span>Cats</span></div>
+      </div>
+    </div>
+
+    <section class="block" id="adopt">
+      <div class="wrap">
+        <div class="sec-head">
+          <h2>Ready for <span class="script">their home</span></h2>
+          <p>Tap any of them to read their story and send us an enquiry.</p>
+        </div>
+        <div class="filters" id="filters" role="group" aria-label="Filter animals">
+          <button type="button" class="chip-btn" data-sp="all" aria-pressed="true">All</button>
+          <button type="button" class="chip-btn" data-sp="dog" aria-pressed="false">Dogs</button>
+          <button type="button" class="chip-btn" data-sp="cat" aria-pressed="false">Cats</button>
+          <span style="width:10px"></span>
+          <button type="button" class="chip-btn" data-band="all" aria-pressed="true">Any age</button>
+          <button type="button" class="chip-btn" data-band="young" aria-pressed="false">Under 1</button>
+          <button type="button" class="chip-btn" data-band="adult" aria-pressed="false">1–7 years</button>
+          <button type="button" class="chip-btn" data-band="senior" aria-pressed="false">7+ years</button>
+        </div>
+        <div class="grid" id="animals" aria-live="polite">
+          <div class="skel"></div><div class="skel"></div><div class="skel"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block alt" id="how">
+      <div class="wrap">
+        <div class="sec-head">
+          <h2>How adoption <span class="script">works</span></h2>
+          <p>We take our time so every match lasts.</p>
+        </div>
+        <div class="steps">
+          <div class="step"><h3>Say hello</h3><p>Send an enquiry from an animal's page, or just tell us what you're looking for.</p></div>
+          <div class="step"><h3>Adoption form</h3><p>If it looks like a good fit, we'll send you a private link to our adoption form.</p></div>
+          <div class="step"><h3>Meet &amp; home visit</h3><p>Come and meet them, and we'll arrange a home visit, in person or by video.</p></div>
+          <div class="step"><h3>Going home</h3><p>Sign the adoption agreement, and we stay on hand for advice whenever you need us.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" id="happy" hidden>
+      <div class="wrap">
+        <div class="sec-head">
+          <h2>Happy <span class="script">tails</span></h2>
+          <p>Some of the animals who made it from the streets to a home of their own.</p>
+        </div>
+        <div class="tails" id="tails"></div>
+      </div>
+    </section>
+
+    <section class="block alt" id="contact">
+      <div class="wrap split">
+        <div>
+          <div class="sec-head" style="margin-bottom:14px"><h2>Get in <span class="script">touch</span></h2></div>
+          <p style="color:var(--muted)">Questions about adopting, fostering, volunteering, or an animal you've found? Send us a message and one of the team will get back to you.</p>
+          <div class="panel" style="margin-top:20px">
+            <h3>Thinking of fostering?</h3>
+            <p>Fosters give an animal a calm home while they wait for their family, and free up space for the next rescue. Mention it in your message and we'll tell you what's involved.</p>
+          </div>
+        </div>
+        <div class="panel">
+          <form class="form" id="contact-form" novalidate>
+            <div class="field"><label for="cn">Your name</label><input id="cn" name="name" required maxlength="120" autocomplete="name"></div>
+            <div class="row2">
+              <div class="field"><label for="ce">Email</label><input id="ce" name="email" type="email" required maxlength="200" autocomplete="email"></div>
+              <div class="field"><label for="cp">Phone / WhatsApp · optional</label><input id="cp" name="phone" type="tel" maxlength="40" autocomplete="tel"></div>
+            </div>
+            <div class="field"><label for="cm">Message</label><textarea id="cm" name="message" required maxlength="4000"></textarea></div>
+            <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+            <button class="btn" type="submit">Send message</button>
+            <div class="out" aria-live="polite"></div>
+            <p class="small">We only use your details to reply to you.</p>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap">
+      <a class="logo-link" href="./"><img src="logo.png" alt=""><span>Streets <em>to</em> Home</span></a>
+      <small>Animal rescue · Doha, Qatar · © <span id="year"></span> Streets to Home</small>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,4 +1,4 @@
-name: Deploy Streets to Home app
+name: Deploy Streets to Home site and app
 on:
   push:
     branches: [main]
@@ -21,10 +21,16 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      # Public website at the root, staff app under /app
+      - run: |
+          mkdir -p public_html/app
+          cp -r site/. public_html/
+          cp -r dist/. public_html/app/
+          touch public_html/.nojekyll
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: public_html
   deploy:
     needs: build
     runs-on: ubuntu-latest
