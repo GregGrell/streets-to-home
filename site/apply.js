@@ -174,17 +174,13 @@ async function applyPage() {
       if (!r.ok) throw new Error(res.error || 'Something went wrong. Please try again.');
       store.del(draftKey);
       const first = (v.full_name || '').split(' ')[0];
+      const about = animal ? esc(animal.name) : v.animal_name ? esc(v.animal_name) : '';
       root.innerHTML = `
         <div class="panel thanks">
           <img src="logo.png" alt="" width="96" height="96">
           <h1>Thank you${first ? `, ${esc(first)}` : ''}!</h1>
-          <p>We've received your ${form.pet} adoption application${animal ? ` for <b>${esc(animal.name)}</b>` : ''}. ${res.emailed ? `We've sent a copy to <b>${esc(v.email)}</b>.` : ''}</p>
-          <h2>What happens next</h2>
-          <ol>
-            <li>One of our team reads your application, usually within a few days.</li>
-            <li>We'll contact you by ${esc((v.contact_by || 'WhatsApp or email').toLowerCase())} to talk it through.</li>
-            <li>If it looks like a good match, we'll arrange for you to meet ${animal ? esc(animal.name) : `the ${form.pet}`} and do a home visit.</li>
-          </ol>
+          <p>Thank you for your interest in adopting ${about ? `<b>${about}</b>` : `a rescue ${form.pet}`}. We've received your form${res.emailed ? ` and sent a copy to <b>${esc(v.email)}</b>` : ''}.</p>
+          <p>${about ? `One of our team will be in touch soon to tell you more about ${about} and answer any questions.` : `One of our team will be in touch soon to talk about which of our ${form.pet}s might suit you.`} There's no commitment at this stage.</p>
           <a class="btn ghost" href="./#adopt">Back to our animals</a>
         </div>`;
       window.scrollTo({ top: 0 });

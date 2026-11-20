@@ -126,9 +126,9 @@ Deno.serve(async (req) => {
     const wa = phone.replace(/[^\d]/g, '');
     const team = send(key, {
       from, to, reply_to: email,
-      subject: `New ${pet} adoption application: ${fullName}${wanted ? ` for ${wanted}` : ''}`,
+      subject: `New ${pet} adoption interest form: ${fullName}${wanted ? ` for ${wanted}` : ''}`,
       html: shell(`
-        <h1 style="margin:0 0 6px;font-size:22px;color:#3B2918">New ${pet} adoption application</h1>
+        <h1 style="margin:0 0 6px;font-size:22px;color:#3B2918">New ${pet} adoption interest form</h1>
         <p style="margin:0 0 16px;color:#6B5B4D">${esc(fullName)}${wanted ? ` · for <b>${esc(wanted)}</b>` : ''}</p>
         <p style="margin:0 0 6px"><b>Email:</b> <a href="mailto:${esc(email)}" style="color:#A65A4C">${esc(email)}</a></p>
         ${phone ? `<p style="margin:0 0 6px"><b>Phone:</b> ${esc(phone)}${wa ? ` · <a href="https://wa.me/${wa}" style="color:#A65A4C">WhatsApp</a>` : ''}</p>` : ''}
@@ -136,19 +136,17 @@ Deno.serve(async (req) => {
         <p style="margin:0;font-size:13px;color:#6B5B4D">Reply to this email to answer ${esc(first)} directly.</p>
         ${answersHtml(items)}`),
     });
+    const about = wanted ? esc(wanted) : `a rescue ${pet}`;
     const thanks = send(key, {
       from, to: [email], reply_to: replyTo,
-      subject: `Thank you for your adoption application${wanted ? ` for ${wanted}` : ''}`,
+      subject: wanted ? `Thank you for your interest in adopting ${wanted}` : `Thank you for your interest in adopting a rescue ${pet}`,
       html: shell(`
         <h1 style="margin:0 0 12px;font-size:24px;color:#3B2918">Thank you, ${esc(first)}!</h1>
-        <p style="margin:0 0 12px;line-height:1.55">Thank you for applying to adopt ${wanted ? `<b>${esc(wanted)}</b>` : `a rescue ${pet}`} from Streets to Home. We've received your application, and we're so grateful you're thinking of giving one of our animals a home.</p>
-        <h2 style="margin:20px 0 8px;font-size:17px;color:#3B2918">What happens next</h2>
-        <ol style="margin:0 0 12px;padding-left:20px;line-height:1.6">
-          <li>One of our team will read your application carefully, usually within a few days.</li>
-          <li>We'll get in touch to talk it through and answer any questions you have.</li>
-          <li>If it looks like a good match, we'll arrange for you to meet ${wanted ? esc(wanted) : `the ${pet}`} and do a home visit.</li>
-        </ol>
-        <p style="margin:0 0 12px;line-height:1.55">We look for the best match for each animal, so it can take a little time, and applying doesn't guarantee adoption. If anything changes, or you'd like to add something, just reply to this email.</p>
+        <p style="margin:0 0 12px;line-height:1.55">Thank you so much for your interest in adopting ${wanted ? `<b>${about}</b>` : about} from Streets to Home. We've received your form, and it's lovely to hear from you.</p>
+        <p style="margin:0 0 12px;line-height:1.55">${wanted
+          ? `One of our team will be in touch soon to say hello, tell you more about ${about}, and answer any questions you have.`
+          : `One of our team will be in touch soon to say hello and talk about which of our ${pet}s might be a good fit for you and your home.`}</p>
+        <p style="margin:0 0 12px;line-height:1.55">There's no commitment at this stage. If you think of anything else you'd like us to know, just reply to this email.</p>
         <p style="margin:0 0 4px;line-height:1.55">With thanks,<br><b>The Streets to Home team</b></p>
         <h2 style="margin:28px 0 0;font-size:15px;color:#6B5B4D">A copy of your answers</h2>
         ${answersHtml(items)}`),
