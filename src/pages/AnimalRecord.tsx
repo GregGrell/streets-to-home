@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useAuth } from '../auth';
 import { Empty, Page, Pill, PhotoPicker, StoredImage, toast } from '../components/ui';
@@ -220,20 +220,22 @@ function Care({ a }: { a: Row }) {
           const over = d && d.due < today();
           const soon = d && !over && d.due <= addDays(today(), 14);
           return (
-            <div key={t.id} className="row" style={{ alignItems: 'center' }}>
+            <Fragment key={t.id}>
+            <div className="row" style={{ alignItems: 'center' }}>
               <div className="grow">
                 <span className="t15">{t.name}</span>
                 <span className="t13" style={last && t.kind === 'test' && isPositive(last.result) ? { color: 'var(--red)', fontWeight: 700 } : undefined}>{last ? `${t.kind === 'test' ? 'Tested' : 'Last'} ${fmt(last.given_on)}${t.kind === 'test' ? ` · ${last.result || 'no result'}` : last.product ? ` · ${last.product}` : ''}` : 'No record yet'}</span>
                 {d && <span className="t13" style={over ? { color: 'var(--red)', fontWeight: 700 } : soon ? { color: 'var(--amber)', fontWeight: 700 } : undefined}>{over ? 'Overdue since' : 'Due'} {fmt(d.due)}</span>}
               </div>
-              <button className={`btn sm ${d && (over || soon) ? '' : 'ghost'}`} style={{ flex: '0 0 auto' }} onClick={() => setAdding({ type: t, prefill: last })}>{d && (over || soon) ? 'Done' : 'Log'}</button>
+              <button className={`btn sm ${d && (over || soon) ? '' : 'ghost'}`} style={{ flex: '0 0 auto' }} onClick={() => setAdding(adding?.type?.id === t.id ? null : { type: t, prefill: last })}>{d && (over || soon) ? 'Done' : 'Log'}</button>
             </div>
+            {adding?.type?.id === t.id && <TreatmentForm key={t.id} a={a} type={t} prefill={adding?.prefill ?? null} onDone={() => setAdding(null)} />}
+            </Fragment>
           );
         })}
-        <button className="btn outline" style={{ marginTop: 8 }} onClick={() => setAdding({ type: null })}>+ Log another treatment</button>
+        <button className="btn outline" style={{ marginTop: 8 }} onClick={() => setAdding(adding && !adding.type ? null : { type: null })}>+ Log another treatment</button>
+        {adding && !adding.type && <TreatmentForm key="other" a={a} type={null} prefill={null} onDone={() => setAdding(null)} />}
       </section>
-
-      {adding && <TreatmentForm a={a} type={adding.type ?? null} prefill={adding.prefill ?? null} onDone={() => setAdding(null)} />}
 
       {(a.microchip_on || firstRabies || ratt) && (
         <section className="card">
@@ -310,8 +312,11 @@ function TreatmentForm({ a, type, prefill, onDone }: { a: Row; type: Row | null;
     onDone();
   };
 
+  const box = useRef<HTMLElement>(null);
+  useEffect(() => { box.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, []);
+
   return (
-    <section className="card blue">
+    <section className="card blue" ref={box} style={{ margin: '8px 0' }}>
       <h2 className="h">{t ? t.name : 'Log a treatment'}</h2>
       {!type && (
         <label className="field">
