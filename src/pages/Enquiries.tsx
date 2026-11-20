@@ -19,6 +19,12 @@ export const ENQ_STATUS: Record<string, { label: string; bg: string; fg: string;
   closed: { label: 'Closed', bg: 'var(--line-2)', fg: 'var(--ink-2)', open: false },
 };
 
+/** Online applications from the website carry form_answers.form = 'cat' | 'dog'. */
+export const kindLabel = (e: any) =>
+  e.form_answers?.form === 'cat' ? 'Cat adoption application'
+    : e.form_answers?.form === 'dog' ? 'Dog adoption application'
+      : e.kind === 'adoption' ? 'Adoption enquiry' : 'General enquiry';
+
 /** Link the applicant opens. The form lives in this app at #/apply/<token>, no login needed. */
 export const formLink = (token: string) => `${location.origin}${location.pathname}#/apply/${token}`;
 
@@ -39,7 +45,7 @@ export default function Enquiries() {
         <Pill on={view === 'all'} onClick={() => setView('all')}>All</Pill>
       </div>
       <section className="card tight">
-        {!shown.length && <Empty>{list.length ? 'None here.' : 'No enquiries yet. They arrive here from the website contact and adoption forms.'}</Empty>}
+        {!shown.length && <Empty>{list.length ? 'None here.' : 'No enquiries yet. They arrive here from the website contact form, animal pages and online adoption applications.'}</Empty>}
         {shown.map((e) => {
           const a = animals.find((x) => x.id === e.animal_id);
           const st = ENQ_STATUS[e.status] ?? ENQ_STATUS.new;
@@ -48,7 +54,7 @@ export default function Enquiries() {
               {a ? <Avatar a={a} size={44} /> : <span className="ic" aria-hidden="true" style={{ width: 44, height: 44, borderRadius: 22, background: 'var(--blue-tint)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Icon name="mail" size={20} color="var(--blue)" /></span>}
               <div className="grow">
                 <span className="t15">{e.full_name}</span>
-                <span className="t13">{e.kind === 'adoption' ? `Adoption${a ? ` · ${a.name}` : ''}` : 'General enquiry'} · {shortDate(today(new Date(e.created_at)))}</span>
+                <span className="t13">{kindLabel(e)}{a ? ` · ${a.name}` : ''} · {shortDate(today(new Date(e.created_at)))}</span>
                 {e.message && <span className="t13" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 420 }}>{e.message}</span>}
               </div>
               <span className="chip" style={{ background: st.bg, color: st.fg }}>{st.label}</span>
@@ -97,7 +103,7 @@ export function EnquiryView() {
   };
 
   return (
-    <Page title={e.full_name} sub={`${e.kind === 'adoption' ? 'Adoption enquiry' : 'General enquiry'} · ${shortDate(today(new Date(e.created_at)))} ${timeOf(e.created_at)}`} back="Enquiries"
+    <Page title={e.full_name} sub={`${kindLabel(e)} · ${shortDate(today(new Date(e.created_at)))} ${timeOf(e.created_at)}`} back="Enquiries"
       right={<span className="chip" style={{ background: st.bg, color: st.fg }}>{st.label}</span>}>
       <section className="card">
         {a && (
@@ -133,11 +139,18 @@ export function EnquiryView() {
         {e.form_submitted_at && e.form_answers && (
           <>
             <span className="ok">Received {shortDate(today(new Date(e.form_submitted_at)))} at {timeOf(e.form_submitted_at)}</span>
-            {QUESTIONS.map((q) => {
-              const v = e.form_answers[q.key];
-              if (v === undefined || v === '' || q.type === 'section') return q.type === 'section' ? <h3 key={q.key} className="h" style={{ paddingTop: 10 }}>{q.label}</h3> : null;
-              return <div key={q.key} className="qa"><b>{q.label}</b><span>{Array.isArray(v) ? v.join(', ') : typeof v === 'boolean' ? (v ? 'Yes' : 'No') : String(v)}</span></div>;
-            })}
+            {Array.isArray(e.form_answers.items)
+              ? (e.form_answers.items as { s: string; q: string; a: string }[]).map((it, i, all) => (
+                <div key={i} style={{ display: 'contents' }}>
+                  {(i === 0 || all[i - 1].s !== it.s) && <h3 className="h" style={{ paddingTop: 10 }}>{it.s}</h3>}
+                  <div className="qa"><b>{it.q}</b><span style={{ whiteSpace: 'pre-wrap' }}>{it.a}</span></div>
+                </div>
+              ))
+              : QUESTIONS.map((q) => {
+                const v = e.form_answers[q.key];
+                if (v === undefined || v === '' || q.type === 'section') return q.type === 'section' ? <h3 key={q.key} className="h" style={{ paddingTop: 10 }}>{q.label}</h3> : null;
+                return <div key={q.key} className="qa"><b>{q.label}</b><span>{Array.isArray(v) ? v.join(', ') : typeof v === 'boolean' ? (v ? 'Yes' : 'No') : String(v)}</span></div>;
+              })}
           </>
         )}
       </section>

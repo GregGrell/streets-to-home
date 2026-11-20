@@ -75,7 +75,7 @@ function wireForm(form, kind, slug) {
         p_animal_slug: slug || null,
       });
       form.reset();
-      out.innerHTML = `<p class="msg ok">Thank you! We've got your message and will be in touch soon.${kind === 'adoption' ? ' If it looks like a good match we\'ll send you our adoption form.' : ''}</p>`;
+      out.innerHTML = `<p class="msg ok">Thank you! We've got your message and will be in touch soon.</p>`;
     } catch (err) {
       out.innerHTML = `<p class="msg err">${esc(/email/i.test(err.message) ? 'Please check your email address.' : err.message)}</p>`;
     } finally {
@@ -164,18 +164,23 @@ async function animalPage() {
         <div class="facts">${facts.map(([k, v]) => `<div class="fact"><b>${k}</b><span>${esc(v)}</span></div>`).join('')}</div>
         ${a.public_bio ? `<div class="story"><h2>About ${esc(a.name)}</h2><p>${esc(a.public_bio)}</p></div>` : ''}
         ${a.intake_story ? `<div class="story"><h2>${esc(a.name)}'s story</h2><p>${esc(a.intake_story)}</p></div>` : ''}
-        <div class="panel" style="margin-top:24px" id="enquire">
-          <h3>Interested in ${esc(a.name)}?</h3>
-          <p class="small" style="margin-bottom:12px">Tell us a little about yourself. If it looks like a good match, we'll send you our full adoption form.</p>
+        <div class="panel apply-cta" style="margin-top:24px">
+          <h3>Would you like to adopt ${esc(a.name)}?</h3>
+          <p style="margin-bottom:14px">Fill in our ${a.species === 'cat' ? 'cat' : 'dog'} adoption form online. It takes about 15 minutes, and we'll be in touch to talk it through.</p>
+          <a class="btn" style="width:100%" href="apply.html?a=${encodeURIComponent(a.slug)}">Apply to adopt ${esc(a.name)}</a>
+        </div>
+        <div class="panel" style="margin-top:16px" id="enquire">
+          <h3>Just have a question?</h3>
+          <p class="small" style="margin-bottom:12px">Ask us anything about ${esc(a.name)} and one of the team will get back to you.</p>
           <form class="form" id="adopt-form" novalidate>
             <div class="field"><label for="n">Your name</label><input id="n" name="name" required maxlength="120" autocomplete="name"></div>
             <div class="row2">
               <div class="field"><label for="e">Email</label><input id="e" name="email" type="email" required maxlength="200" autocomplete="email"></div>
               <div class="field"><label for="p">Phone / WhatsApp</label><input id="p" name="phone" type="tel" maxlength="40" autocomplete="tel"></div>
             </div>
-            <div class="field"><label for="m">About your home</label><textarea id="m" name="message" maxlength="4000" placeholder="Who lives with you, other pets, villa or apartment, garden…"></textarea></div>
+            <div class="field"><label for="m">Your question</label><textarea id="m" name="message" maxlength="4000"></textarea></div>
             <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
-            <button class="btn" type="submit">Send enquiry about ${esc(a.name)}</button>
+            <button class="btn ghost" type="submit">Send question</button>
             <div class="out" aria-live="polite"></div>
           </form>
         </div>
