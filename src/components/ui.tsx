@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signedUrl } from '../lib/store';
 
@@ -119,6 +119,51 @@ export function PhotoPicker({ value, onChange, label = 'Add photo', accept = 'im
       <input ref={cam} type="file" accept="image/*" capture="environment" hidden onChange={pick} />
       <input ref={gal} type="file" accept="image/*" hidden onChange={pick} />
       <input ref={fil} type="file" accept={files} hidden onChange={pick} />
+    </div>
+  );
+}
+
+/** Pick several photos/files at once; each shows as a thumbnail you can remove before adding. */
+export function MultiPhotoPicker({ value, onChange, label = 'Add photos', accept = 'image/*' }: { value: Blob[]; onChange: (b: Blob[]) => void; label?: string; accept?: string }) {
+  const cam = useRef<HTMLInputElement>(null);
+  const gal = useRef<HTMLInputElement>(null);
+  const fil = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const urls = useMemo(() => value.map((b) => (b.type.startsWith('image/') ? URL.createObjectURL(b) : null)), [value]);
+  useEffect(() => () => urls.forEach((u) => u && URL.revokeObjectURL(u)), [urls]);
+  const pick = async (e: ChangeEvent<HTMLInputElement>) => {
+    const list = Array.from(e.target.files ?? []);
+    e.target.value = '';
+    if (!list.length) return;
+    setBusy(true);
+    const ready = await Promise.all(list.map((f) => (f.type.startsWith('image/') ? shrink(f) : Promise.resolve(f as Blob))));
+    setBusy(false);
+    onChange([...value, ...ready]);
+  };
+  const files = accept.includes('pdf') ? accept : `${accept},application/pdf`;
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <span className="t13" style={{ fontWeight: 600 }}>{label}{value.length ? ` · ${value.length} selected` : ''}</span>
+      {value.length > 0 && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(88px, 1fr))', gap: 8 }}>
+          {value.map((b, i) => (
+            <div key={i} style={{ position: 'relative', aspectRatio: '1', borderRadius: 10, overflow: 'hidden', background: 'var(--blue-wash)', border: '1px solid var(--blue-line)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {urls[i] ? <img src={urls[i]!} alt={`Selected ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span className="t13" style={{ fontWeight: 700 }}>{b.type === 'application/pdf' ? 'PDF' : 'File'}</span>}
+              <button type="button" aria-label={`Remove ${i + 1}`} onClick={() => onChange(value.filter((_, j) => j !== i))}
+                style={{ position: 'absolute', top: 4, right: 4, width: 28, height: 28, borderRadius: 14, border: 0, background: 'rgba(43,30,19,.75)', color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer', lineHeight: 1 }}>×</button>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="picker3" role="group" aria-label={label}>
+        <button type="button" className="photo" onClick={() => cam.current?.click()}><Icon name="camera" size={18} color="var(--blue)" /> Camera</button>
+        <button type="button" className="photo" onClick={() => gal.current?.click()}><Icon name="image" size={18} color="var(--blue)" /> Gallery</button>
+        <button type="button" className="photo" onClick={() => fil.current?.click()}><Icon name="file" size={18} color="var(--blue)" /> Files</button>
+      </div>
+      {busy && <span className="note">Preparing photos…</span>}
+      <input ref={cam} type="file" accept="image/*" capture="environment" hidden onChange={pick} />
+      <input ref={gal} type="file" accept="image/*" multiple hidden onChange={pick} />
+      <input ref={fil} type="file" accept={files} multiple hidden onChange={pick} />
     </div>
   );
 }

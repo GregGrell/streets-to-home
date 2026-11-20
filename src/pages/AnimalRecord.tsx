@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useAuth } from '../auth';
-import { Empty, Page, Pill, PhotoPicker, StoredImage, toast } from '../components/ui';
+import { Empty, MultiPhotoPicker, Page, Pill, PhotoPicker, StoredImage, toast } from '../components/ui';
 import { CHIP_RESULT, CONTACT_KIND, FIELD_LABEL, KIND_LABEL, SEX_LABEL, STATUS, STATUS_ORDER, TABLE_LABEL, ageText, careDue, isPositive, latestGiven, testParts, typesFor } from '../lib/animals';
 import { useProfiles, useTable } from '../lib/hooks';
 import { insert, queueUpload, remove, update, type Row } from '../lib/store';
@@ -626,29 +626,35 @@ function ContactLine({ id, fallback }: { id: string; fallback: string }) {
 function Files({ a }: { a: Row }) {
   const { me } = useAuth();
   const files = useTable('animal_files').filter((f) => f.animal_id === a.id).sort((x, y) => y.created_at.localeCompare(x.created_at));
-  const [blob, setBlob] = useState<Blob | null>(null);
+  const [blobs, setBlobs] = useState<Blob[]>([]);
   const [caption, setCaption] = useState('');
   const [isDoc, setIsDoc] = useState(false);
   const add = () => {
-    if (!blob) return;
-    const kind = blob.type.startsWith("image/") && !isDoc ? 'photo' : 'document';
-    const path = queueUpload(kind === 'photo' ? 'photos' : 'certificates', blob, 'animals');
-    insert('animal_files', { animal_id: a.id, kind, path, caption: caption.trim(), is_public: false, phase: 'now', sort: 0, created_by: me.id, created_at: nowIso() });
-    if (kind === 'photo' && !a.photo_path) update('animals', { id: a.id }, { photo_path: path });
-    setBlob(null); setCaption(''); toast('Added');
+    if (!blobs.length) return;
+    let main = a.photo_path;
+    blobs.forEach((blob, i) => {
+      const kind = blob.type.startsWith('image/') && !isDoc ? 'photo' : 'document';
+      const path = queueUpload(kind === 'photo' ? 'photos' : 'certificates', blob, 'animals');
+      insert('animal_files', { animal_id: a.id, kind, path, caption: caption.trim(), is_public: false, phase: 'now', sort: i, created_by: me.id, created_at: new Date(Date.now() + i).toISOString() });
+      if (kind === 'photo' && !main) { main = path; update('animals', { id: a.id }, { photo_path: path }); }
+    });
+    toast(`${blobs.length} added`);
+    setBlobs([]); setCaption(''); setIsDoc(false);
   };
+  const anyImage = blobs.some((b) => b.type.startsWith('image/'));
   return (
     <>
       <section className="card">
-        <h2 className="h">Add a photo or document</h2>
-        <PhotoPicker value={blob} onChange={setBlob} label="Photo, passport scan or PDF" accept="image/*,application/pdf" required />
-        <label className="field"><span>Caption · optional</span><input value={caption} onChange={(e) => setCaption(e.target.value)} placeholder="e.g. Pet passport page 3" /></label>
-        {blob?.type.startsWith('image/') && (
+        <h2 className="h">Add photos or documents</h2>
+        <MultiPhotoPicker value={blobs} onChange={setBlobs} label="Photos, passport scans or PDFs" accept="image/*,application/pdf" />
+        {blobs.length > 0 && <span className="note">Tap × on any you don't want before adding.</span>}
+        <label className="field"><span>Caption · optional{blobs.length > 1 ? ' · goes on all of them' : ''}</span><input value={caption} onChange={(e) => setCaption(e.target.value)} placeholder="e.g. Pet passport page 3" /></label>
+        {anyImage && (
           <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 14 }}>
-            <input type="checkbox" checked={isDoc} onChange={(e) => setIsDoc(e.target.checked)} style={{ width: 20, height: 20 }} /> This is a document scan (passport, certificate), keep it private
+            <input type="checkbox" checked={isDoc} onChange={(e) => setIsDoc(e.target.checked)} style={{ width: 20, height: 20 }} /> {blobs.length > 1 ? 'These are document scans' : 'This is a document scan'} (passport, certificate), keep private
           </label>
         )}
-        <button className="btn" disabled={!blob} onClick={add}>Add</button>
+        <button className="btn" disabled={!blobs.length} onClick={add}>{blobs.length > 1 ? `Add ${blobs.length}` : 'Add'}</button>
       </section>
       <section className="card tight">
         <h2 className="h" style={{ paddingBottom: 6 }}>Photos & files · {files.length}</h2>
