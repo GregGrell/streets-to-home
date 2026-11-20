@@ -3,6 +3,7 @@ import { STATUS } from '../lib/animals';
 import { useTable } from '../lib/hooks';
 import { update, type Row } from '../lib/store';
 import { toast } from '../components/ui';
+import { InstaPost } from '../components/InstaPost';
 
 const GOOD: [string, string][] = [['good_with_kids', 'Children'], ['good_with_dogs', 'Dogs'], ['good_with_cats', 'Cats']];
 
@@ -25,7 +26,8 @@ export function Website({ a }: { a: Row }) {
     if (on && !a.photo_path) return toast('Add a main photo first (Photos & files)');
     if (on && !a.public_bio?.trim() && !f.public_bio.trim()) return toast('Write a short bio first');
     update('animals', { id: a.id }, { ...(dirty ? f : {}), published: on, updated_at: new Date().toISOString() });
-    toast(on ? (listable ? `${a.name} is now on the website` : 'Ticked. Shows on the website when status is With us or Foster') : `${a.name} taken off the website`);
+    toast(on ? (listable ? `${a.name} is now on the website. Instagram post below` : 'Ticked. Shows on the website when status is With us or Foster') : `${a.name} taken off the website`);
+    if (on && listable) setTimeout(() => document.getElementById('insta')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 600);
   };
 
   return (
@@ -44,6 +46,8 @@ export function Website({ a }: { a: Row }) {
         )}
         <span className="note">The website only ever sees the name, breed, sex, age, neutered, the bio below and photos you tick "On website". Medical records, microchip, contacts and notes are never shown.</span>
       </section>
+
+      {onSite && <InstaPost a={a} photos={files} />}
 
       <section className="card">
         <label className="field">
