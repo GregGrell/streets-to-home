@@ -667,12 +667,12 @@ function Files({ a }: { a: Row }) {
               {f.kind === 'photo' && (a.photo_path === f.path
                 ? <span className="ok" style={{ fontSize: 13 }}>Main photo</span>
                 : <button className="btn link sm" style={{ alignSelf: 'flex-start', minHeight: 28, padding: 0 }} onClick={() => { update('animals', { id: a.id }, { photo_path: f.path }); toast('Main photo set'); }}>Make main photo</button>)}
-              {f.kind === 'photo' && (
+              {(f.kind === 'photo' || f.kind === 'video') && (
                 <>
                   <label style={{ display: 'flex', gap: 6, alignItems: 'center', fontSize: 13 }}>
                     <input type="checkbox" checked={!!f.is_public} onChange={(e) => { update('animal_files', { id: f.id }, { is_public: e.target.checked }); toast(e.target.checked ? 'Shown on website' : 'Hidden from website'); }} style={{ width: 18, height: 18 }} /> On website
                   </label>
-                  {f.is_public && (
+                  {f.is_public && f.kind === 'photo' && (
                     <select className="input" style={{ minHeight: 34, fontSize: 13, padding: '4px 8px' }} value={f.phase ?? 'now'} aria-label="Before or now" onChange={(e) => update('animal_files', { id: f.id }, { phase: e.target.value })}>
                       <option value="now">Now</option>
                       <option value="before">Before (rescue day)</option>

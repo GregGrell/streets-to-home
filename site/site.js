@@ -135,9 +135,15 @@ async function animalPage() {
     return;
   }
   document.title = `${a.name} · Streets to Home`;
-  const now = a.photos.filter((p) => p.phase !== 'before');
-  const before = a.photos.filter((p) => p.phase === 'before');
-  const pics = [...new Set([a.photo_path, ...now.map((p) => p.path)].filter(Boolean))];
+  const isVid = (p) => p.kind === 'video';
+  const now = a.photos.filter((p) => p.phase !== 'before' || isVid(p));
+  const before = a.photos.filter((p) => p.phase === 'before' && !isVid(p));
+  const media = [];
+  for (const m of [{ path: a.photo_path, kind: 'photo' }, ...now]) if (m.path && !media.some((x) => x.path === m.path)) media.push(m);
+  const pics = media.filter((m) => !isVid(m)).map((m) => m.path);
+  const big = (m) => (isVid(m)
+    ? `<video id="mainimg" src="${photo(m.path)}" controls playsinline preload="metadata"></video>`
+    : `<img id="mainimg" src="${photo(m.path)}" alt="${esc(a.name)}">`);
   const facts = [
     ['Species', species(a.species)], ['Sex', sexLabel(a.sex) || 'Unknown'], ['Age', age(a.age_months) || 'Unknown'],
     ['Breed', a.breed || 'Mixed'], ['Neutered', a.neutered == null ? 'Ask us' : a.neutered ? 'Yes' : 'Not yet'],
@@ -145,8 +151,8 @@ async function animalPage() {
   root.innerHTML = `
     <div class="animal">
       <div class="gallery">
-        <div class="main">${pics[0] ? `<img id="mainimg" src="${photo(pics[0])}" alt="${esc(a.name)}">` : ''}</div>
-        ${pics.length > 1 ? `<div class="thumbs">${pics.map((p, i) => `<button type="button" aria-pressed="${i === 0}" data-src="${photo(p)}" aria-label="Photo ${i + 1}"><img src="${photo(p)}" alt="" loading="lazy"></button>`).join('')}</div>` : ''}
+        <div class="main" id="mainbox">${media[0] ? big(media[0]) : ''}</div>
+        ${media.length > 1 ? `<div class="thumbs">${media.map((m, i) => `<button type="button" aria-pressed="${i === 0}" data-i="${i}" aria-label="${isVid(m) ? 'Video' : 'Photo'} ${i + 1}">${isVid(m) ? `<video src="${photo(m.path)}#t=0.5" muted playsinline preload="metadata"></video><span class="play" aria-hidden="true">▶</span>` : `<img src="${photo(m.path)}" alt="" loading="lazy">`}</button>`).join('')}</div>` : ''}
         ${before.length && pics.length ? `
           <div class="bn">
             <h2><span class="script">From the streets…</span> to home</h2>
@@ -187,7 +193,7 @@ async function animalPage() {
       </div>
     </div>`;
   root.querySelectorAll('.thumbs button').forEach((b) => b.addEventListener('click', () => {
-    $('#mainimg').src = b.dataset.src;
+    $('#mainbox').innerHTML = big(media[+b.dataset.i]);
     root.querySelectorAll('.thumbs button').forEach((x) => x.setAttribute('aria-pressed', x === b));
   }));
   const bn = $('#bn');

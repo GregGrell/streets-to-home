@@ -239,3 +239,9 @@ fieldset.q legend { font-weight: 600; font-size: 15px; padding: 0; margin-bottom
 .thanks li { margin: 6px 0; }
 .step .btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
 .btn.sm { min-height: 42px; padding: 0 14px; font-size: 14px; border-radius: 12px; }
+
+/* videos in the animal gallery */
+.gallery .main video { width: 100%; height: 100%; object-fit: contain; background: #000; }
+.thumbs button { position: relative; }
+.thumbs video { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+.thumbs .play { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 22px; text-shadow: 0 1px 4px rgba(0,0,0,.6); }

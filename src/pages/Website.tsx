@@ -9,7 +9,9 @@ const GOOD: [string, string][] = [['good_with_kids', 'Children'], ['good_with_do
 
 /** What the public website shows for this animal. Nothing here touches the medical record. */
 export function Website({ a }: { a: Row }) {
-  const files = useTable('animal_files').filter((f) => f.animal_id === a.id && f.kind === 'photo');
+  const media = useTable('animal_files').filter((f) => f.animal_id === a.id && (f.kind === 'photo' || f.kind === 'video'));
+  const files = media.filter((f) => f.kind === 'photo');
+  const publicVideos = media.filter((f) => f.kind === 'video' && f.is_public);
   const blank = () => ({
     public_bio: a.public_bio ?? '', intake_story: a.intake_story ?? '',
     good_with_kids: a.good_with_kids ?? 'unknown', good_with_dogs: a.good_with_dogs ?? 'unknown', good_with_cats: a.good_with_cats ?? 'unknown',
@@ -44,10 +46,10 @@ export function Website({ a }: { a: Row }) {
         {a.published && !listable && (
           <span className="warn">Hidden while status is "{STATUS[a.status]?.label}". Only animals that are With us or at a Foster are listed.{a.status === 'adopted' && a.show_in_happy_tails ? ' Shown in Happy Tails instead.' : ''}</span>
         )}
-        <span className="note">The website only ever sees the name, breed, sex, age, neutered, the bio below and photos you tick "On website". Medical records, microchip, contacts and notes are never shown.</span>
+        <span className="note">The website only ever sees the name, breed, sex, age, neutered, the bio below and photos and videos you tick "On website". Medical records, microchip, contacts and notes are never shown.</span>
       </section>
 
-      {onSite && <InstaPost a={a} photos={files} />}
+      {onSite && <InstaPost a={a} photos={files} videos={publicVideos} />}
 
       <section className="card">
         <label className="field">
@@ -77,7 +79,7 @@ export function Website({ a }: { a: Row }) {
           <input type="checkbox" checked={f.show_in_happy_tails} onChange={(e) => setF({ ...f, show_in_happy_tails: e.target.checked })} style={{ width: 20, height: 20 }} />
           Show in Happy Tails once adopted
         </label>
-        <span className="note">{publicPhotos} photo{publicPhotos === 1 ? '' : 's'} ticked "On website" plus the main photo. Tick more under Photos &amp; files, and mark rescue-day photos as "Before" for the before-and-after.</span>
+        <span className="note">{publicPhotos} photo{publicPhotos === 1 ? '' : 's'}{publicVideos.length ? ` and ${publicVideos.length} video${publicVideos.length === 1 ? '' : 's'}` : ''} ticked "On website" plus the main photo. Tick more under Photos &amp; files, and mark rescue-day photos as "Before" for the before-and-after.</span>
         <button className="btn" disabled={!dirty} onClick={() => { update('animals', { id: a.id }, { ...f, public_bio: f.public_bio.trim(), intake_story: f.intake_story.trim(), updated_at: new Date().toISOString() }); toast('Saved'); }}>
           {dirty ? 'Save website details' : 'No changes'}
         </button>
