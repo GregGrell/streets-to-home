@@ -708,10 +708,27 @@ function History({ a }: { a: Row }) {
     return String(v);
   };
 
+  // Updates are stored either as {field: [old, new]} or as whole rows {old: {...}, new: {...}}; read both.
+  const diff = (r: Row): Record<string, [any, any]> => {
+    const c = (r.changes ?? {}) as Record<string, any>;
+    if (c.old && c.new && typeof c.old === 'object' && !Array.isArray(c.old)) {
+      const out: Record<string, [any, any]> = {};
+      for (const k of Object.keys(c.new)) {
+        if (k === 'updated_at' || k === 'updated_by') continue;
+        if (JSON.stringify(c.old[k]) !== JSON.stringify(c.new[k])) out[k] = [c.old[k], c.new[k]];
+      }
+      return out;
+    }
+    const out: Record<string, [any, any]> = {};
+    for (const [k, v] of Object.entries(c)) if (Array.isArray(v) && v.length === 2) out[k] = [v[0], v[1]];
+    return out;
+  };
+
   const items = useMemo(() => (rows ?? []).filter((r) => {
+    if (r.action === 'update' && !Object.keys(diff(r)).length) return false;
     // location moves already appear as their own entry
     if (r.table_name === 'animals' && r.action === 'update') {
-      const keys = Object.keys(r.changes);
+      const keys = Object.keys(diff(r));
       return !keys.every((k) => ['status', 'status_since', 'kennel_id'].includes(k));
     }
     return true;
@@ -729,7 +746,7 @@ function History({ a }: { a: Row }) {
         const c = r.changes as Record<string, any>;
         const lines =
           r.action === 'update'
-            ? Object.entries(c).map(([k, [o, n]]) => `${FIELD_LABEL[k] ?? k}: ${show(k, o)} → ${show(k, n)}`)
+            ? Object.entries(diff(r)).map(([k, [o, n]]) => `${FIELD_LABEL[k] ?? k}: ${show(k, o)} → ${show(k, n)}`)
             : [c.name ?? c.title ?? (c.status ? STATUS[c.status]?.label : '') ?? '', c.given_on ? `given ${shortDate(c.given_on)}` : '', c.from_on ? `from ${shortDate(c.from_on)}` : '', c.with_name ?? '']
                 .filter(Boolean)
                 .slice(0, 3);
