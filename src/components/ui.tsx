@@ -123,17 +123,24 @@ export function PhotoPicker({ value, onChange, label = 'Add photo', accept = 'im
   );
 }
 
+export const MAX_VIDEO_MB = 50;
+const isVideoPath = (p: string) => /\.(mp4|mov|quicktime|webm|m4v|3gpp?)$/i.test(p);
+
 /** Pick several photos/files at once; each shows as a thumbnail you can remove before adding. */
 export function MultiPhotoPicker({ value, onChange, label = 'Add photos', accept = 'image/*' }: { value: Blob[]; onChange: (b: Blob[]) => void; label?: string; accept?: string }) {
   const cam = useRef<HTMLInputElement>(null);
   const gal = useRef<HTMLInputElement>(null);
   const fil = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
-  const urls = useMemo(() => value.map((b) => (b.type.startsWith('image/') ? URL.createObjectURL(b) : null)), [value]);
+  const urls = useMemo(() => value.map((b) => (b.type.startsWith('image/') || b.type.startsWith('video/') ? URL.createObjectURL(b) : null)), [value]);
+  const videos = accept.includes('video');
   useEffect(() => () => urls.forEach((u) => u && URL.revokeObjectURL(u)), [urls]);
   const pick = async (e: ChangeEvent<HTMLInputElement>) => {
-    const list = Array.from(e.target.files ?? []);
+    let list = Array.from(e.target.files ?? []);
     e.target.value = '';
+    const big = list.filter((f) => f.type.startsWith('video/') && f.size > MAX_VIDEO_MB * 1024 * 1024);
+    if (big.length) toast(`${big.length === 1 ? 'That video is' : `${big.length} videos are`} over ${MAX_VIDEO_MB} MB. Trim it on your phone first`);
+    list = list.filter((f) => !big.includes(f));
     if (!list.length) return;
     setBusy(true);
     const ready = await Promise.all(list.map((f) => (f.type.startsWith('image/') ? shrink(f) : Promise.resolve(f as Blob))));
@@ -148,7 +155,9 @@ export function MultiPhotoPicker({ value, onChange, label = 'Add photos', accept
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(88px, 1fr))', gap: 8 }}>
           {value.map((b, i) => (
             <div key={i} style={{ position: 'relative', aspectRatio: '1', borderRadius: 10, overflow: 'hidden', background: 'var(--blue-wash)', border: '1px solid var(--blue-line)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              {urls[i] ? <img src={urls[i]!} alt={`Selected ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span className="t13" style={{ fontWeight: 700 }}>{b.type === 'application/pdf' ? 'PDF' : 'File'}</span>}
+              {urls[i] && b.type.startsWith('video/')
+                ? <><video src={urls[i]!} muted playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /><span style={{ position: 'absolute', left: 6, bottom: 6, background: 'rgba(43,30,19,.75)', color: '#fff', fontSize: 11, fontWeight: 800, padding: '2px 6px', borderRadius: 6 }}>▶ VIDEO</span></>
+                : urls[i] ? <img src={urls[i]!} alt={`Selected ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span className="t13" style={{ fontWeight: 700 }}>{b.type === 'application/pdf' ? 'PDF' : 'File'}</span>}
               <button type="button" aria-label={`Remove ${i + 1}`} onClick={() => onChange(value.filter((_, j) => j !== i))}
                 style={{ position: 'absolute', top: 4, right: 4, width: 28, height: 28, borderRadius: 14, border: 0, background: 'rgba(43,30,19,.75)', color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer', lineHeight: 1 }}>×</button>
             </div>
@@ -162,7 +171,7 @@ export function MultiPhotoPicker({ value, onChange, label = 'Add photos', accept
       </div>
       {busy && <span className="note">Preparing photos…</span>}
       <input ref={cam} type="file" accept="image/*" capture="environment" hidden onChange={pick} />
-      <input ref={gal} type="file" accept="image/*" multiple hidden onChange={pick} />
+      <input ref={gal} type="file" accept={videos ? 'image/*,video/*' : 'image/*'} multiple hidden onChange={pick} />
       <input ref={fil} type="file" accept={files} multiple hidden onChange={pick} />
     </div>
   );
@@ -192,7 +201,9 @@ export function StoredImage({ bucket, path, alt = '' }: { bucket: string; path?:
     };
   }, [bucket, path]);
   if (!path) return null;
-  if (!url) return <span className="t13">Photo attached</span>;
+  if (!url) return <span className="t13">{isVideoPath(path) ? 'Video attached' : 'Photo attached'}</span>;
+  if (isVideoPath(path))
+    return <video className="thumb" src={url} controls playsInline preload="metadata" style={{ background: '#000' }} />;
   if (path.endsWith('.pdf'))
     return <a href={url} target="_blank" rel="noreferrer" className="ok">Open PDF</a>;
   return (

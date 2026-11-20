@@ -633,8 +633,8 @@ function Files({ a }: { a: Row }) {
     if (!blobs.length) return;
     let main = a.photo_path;
     blobs.forEach((blob, i) => {
-      const kind = blob.type.startsWith('image/') && !isDoc ? 'photo' : 'document';
-      const path = queueUpload(kind === 'photo' ? 'photos' : 'certificates', blob, 'animals');
+      const kind = blob.type.startsWith('video/') ? 'video' : blob.type.startsWith('image/') && !isDoc ? 'photo' : 'document';
+      const path = queueUpload(kind === 'document' ? 'certificates' : 'photos', blob, 'animals');
       insert('animal_files', { animal_id: a.id, kind, path, caption: caption.trim(), is_public: false, phase: 'now', sort: i, created_by: me.id, created_at: new Date(Date.now() + i).toISOString() });
       if (kind === 'photo' && !main) { main = path; update('animals', { id: a.id }, { photo_path: path }); }
     });
@@ -645,13 +645,13 @@ function Files({ a }: { a: Row }) {
   return (
     <>
       <section className="card">
-        <h2 className="h">Add photos or documents</h2>
-        <MultiPhotoPicker value={blobs} onChange={setBlobs} label="Photos, passport scans or PDFs" accept="image/*,application/pdf" />
+        <h2 className="h">Add photos, videos or documents</h2>
+        <MultiPhotoPicker value={blobs} onChange={setBlobs} label="Photos, videos, passport scans or PDFs" accept="image/*,video/*,application/pdf" />
         {blobs.length > 0 && <span className="note">Tap × on any you don't want before adding.</span>}
         <label className="field"><span>Caption · optional{blobs.length > 1 ? ' · goes on all of them' : ''}</span><input value={caption} onChange={(e) => setCaption(e.target.value)} placeholder="e.g. Pet passport page 3" /></label>
         {anyImage && (
           <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 14 }}>
-            <input type="checkbox" checked={isDoc} onChange={(e) => setIsDoc(e.target.checked)} style={{ width: 20, height: 20 }} /> {blobs.length > 1 ? 'These are document scans' : 'This is a document scan'} (passport, certificate), keep private
+            <input type="checkbox" checked={isDoc} onChange={(e) => setIsDoc(e.target.checked)} style={{ width: 20, height: 20 }} /> {blobs.filter((b) => b.type.startsWith('image/')).length > 1 ? 'The photos are document scans' : 'The photo is a document scan'} (passport, certificate), keep private
           </label>
         )}
         <button className="btn" disabled={!blobs.length} onClick={add}>{blobs.length > 1 ? `Add ${blobs.length}` : 'Add'}</button>
@@ -662,8 +662,8 @@ function Files({ a }: { a: Row }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 12 }}>
           {files.map((f) => (
             <div key={f.id} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <StoredImage bucket={f.kind === 'photo' ? 'photos' : 'certificates'} path={f.path} alt={f.caption} />
-              <span className="t13">{f.caption || (f.kind === 'photo' ? 'Photo' : 'Document')} · {fmt(today(new Date(f.created_at)))}</span>
+              <StoredImage bucket={f.kind === 'document' ? 'certificates' : 'photos'} path={f.path} alt={f.caption} />
+              <span className="t13">{f.caption || (f.kind === 'photo' ? 'Photo' : f.kind === 'video' ? 'Video' : 'Document')} · {fmt(today(new Date(f.created_at)))}</span>
               {f.kind === 'photo' && (a.photo_path === f.path
                 ? <span className="ok" style={{ fontSize: 13 }}>Main photo</span>
                 : <button className="btn link sm" style={{ alignSelf: 'flex-start', minHeight: 28, padding: 0 }} onClick={() => { update('animals', { id: a.id }, { photo_path: f.path }); toast('Main photo set'); }}>Make main photo</button>)}
